@@ -18,7 +18,7 @@ n = eval(input('Enter a range N (less than 500): '))
 count = 0
 current = 3
 while count < n:
-    if isPrime(current) and not current == int(str(current)[::-1]):
+    if isPrime(current) and isPrime(int(str(current)[::-1])) and not current == int(str(current)[::-1]):
         emirp.append(current)
         count += 1
     current += 2
