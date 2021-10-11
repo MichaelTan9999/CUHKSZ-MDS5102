@@ -1,4 +1,5 @@
 from copy import deepcopy
+from sys import argv
 
 def permutate(candidates):
     if len(candidates) == 1:
@@ -16,7 +17,10 @@ def permutate(candidates):
     
 
 if __name__ == '__main__':
-    candidates = [int(i) for i in input('Enter some numbers: ').split()]
-    print(candidates)
-    print(permutate(candidates))
+    if len(argv) > 1:
+        candidates = [int(i) for i in argv[1:]]
+        print(permutate(candidates))
+    else:
+        candidates = [int(i) for i in input('Enter some numbers: ').split()]
+        print(permutate(candidates))
 
