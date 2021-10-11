@@ -15,7 +15,8 @@ try:
         raise TypeError
     if num_intervals < 1:
         raise ValueError
-    
+
+# NameError occurs if you input nothing and just press enter. 
 except(TypeError, NameError, SyntaxError, ValueError):
     print('Something you entered is not valid, please check.')
 

@@ -7,9 +7,9 @@ def permutate(candidates):
     else:
         answers = []
         for i in candidates:
+            # deepcopy ensures the passing of parameter is not passing by reference but by value.
             others = deepcopy(candidates)
             others.remove(i)
-            # print(others)
             for subque in permutate(others):
                 subque.insert(0, i)
                 answers.append(subque)

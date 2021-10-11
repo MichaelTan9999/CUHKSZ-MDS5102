@@ -11,6 +11,7 @@ class Node:
         else:
             print('The node is empty.')
     
+    # It is easier to implement getSubTree in Node Class since every node can be regarded as the root of a tree.
     def getSubTree(self, orderList):
         if self.left != None:
             self.left.getSubTree(orderList)
@@ -35,7 +36,6 @@ class Tree:
         current = self.root
 
         while current != None:
-            print(current.val)
             if val <= current.val:
                 if current.left != None:
                     current = current.left
@@ -63,6 +63,8 @@ class Tree:
         
         print('None')
 
+    # Since Python will manage trash itself, here i just delete the root node. And the referrence count of other nodes will be zero,
+    # so the space of other nodes will be released.
     def delete(self):
         self.root = None
 
@@ -80,7 +82,6 @@ class Tree:
 a = Tree()
 for i in [8, 10, 1, 2, 3, 4, 5, 6, 7]:
     a.insert(i)
-    # print('inserted: ', i)
 
 print(a.getRoot().val)
 for i in [2, 3, 4, 5, 6, 7, 100, 0]:

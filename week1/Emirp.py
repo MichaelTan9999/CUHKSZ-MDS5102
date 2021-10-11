@@ -23,11 +23,13 @@ def getEmirp(n):
         current += 2
 
     for x in range(len(emirp)):
+        # By checking the first 500 numbers, the length of them are less than 6.
         print('{:>6}'.format(emirp[x]), end=' ')
         if (x + 1) % 10 == 0:
             print('\n')
 
 if __name__ == '__main__':
+    # Enable the program read arguments from CLI directly
     if len(argv) == 2:
         getEmirp(int(argv[1]))
     else:
