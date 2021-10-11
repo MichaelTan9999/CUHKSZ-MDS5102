@@ -10,7 +10,7 @@ try:
     if type(interval_a) not in [int, float] or type(interval_b) not in [int, float]:
         raise TypeError
     
-    num_intervals = int(eval(input('Enter number of sub-intervals: ')))
+    num_intervals = (eval(input('Enter number of sub-intervals: ')))
     if type(num_intervals) != int:
         raise TypeError
     if num_intervals < 1:
