@@ -46,7 +46,7 @@ def type_ratio(data, platforms) -> None:
         ax.title.set_text(platforms[i])
         plt.pie([num_movie, num_tv_show], labels=labels, autopct='%.2f%%')
 
-    fig.savefig('type_ratio.svg', pad_inches=0.5, bbox_inches='tight')
+    fig.savefig('type_ratio.png', pad_inches=0.5, bbox_inches='tight')
 
 def genres(data, platforms) -> None:
     '''
@@ -78,7 +78,7 @@ def genres(data, platforms) -> None:
         ax.title.set_text(platforms[i])
         plt.pie(thiner_topics.values(), labels=thiner_topics.keys(), autopct='%.2f%%', pctdistance=0.9)
     
-    fig.savefig('genres.svg', pad_inches=0.5)
+    fig.savefig('genres.png', pad_inches=0.5)
 
 def added_date(data, platforms) -> None:
     '''
@@ -107,7 +107,7 @@ def added_date(data, platforms) -> None:
 
         cbar.ax.tick_params(labelsize=8) 
         cbar.ax.minorticks_on()
-        plt.savefig('./contents_update/{}_contents_update.svg'.format(platforms[i]))
+        plt.savefig('./contents_update/{}_contents_update.png'.format(platforms[i]))
 
 def minimum_age(data, platforms) -> None:
     '''
@@ -170,23 +170,50 @@ def producing_countries(data, platforms):
         plt.bar(top_countries, top_counts, data=top_counts)
         for country, counts in zip(top_countries, top_counts):
             plt.text(country, counts + 0.05, '%.0f' % counts, ha='center', va='bottom')
-        plt.savefig('./producing_countries/{}_producing_countries.svg'.format(platforms[i]))
+        plt.savefig('./producing_countries/{}_producing_countries.png'.format(platforms[i]))
         
-def movie_duration_analysis(data, platforms):
+def movie_duration_analysis(data):
     '''
-    find the movie duration of all the platforms
+    find the movie durations of all the platforms
     '''
     all_movie_duration = []
     for i in range(len(data)):
         movie_filtered = data[i][data[i]['type'] == 'Movie']
-        
+
+        # There are some very dirty data which have 'Seasons' instead of 'min' for movies.
         dirty = movie_filtered[(movie_filtered['duration'].str.endswith('Seasons')) | (movie_filtered['duration'].str.endswith('Season'))].index
         movie_filtered.drop(dirty, inplace=True)
         all_movie_duration.extend(movie_filtered['duration'].dropna().str.replace(' min', '').values.astype(int))
+
     sns.set(style='darkgrid')
     sns.kdeplot(data=all_movie_duration, shade=True)
     plt.xlabel('Duration of movies')
-    plt.savefig('movie_duration_distribution.svg')
+    plt.savefig('movie_duration_distribution.png')
+
+def median_movie_duration_by_year(data):
+    '''
+    find the median of movie durations of all the platforms by year.
+    '''
+    all_movie_duration = pd.DataFrame(columns=['duration'], index=['release_year'])
+    print(all_movie_duration)
+    for i in range(len(data)):
+        movie_filtered = data[i][data[i]['type'] == 'Movie']
+        dirty = movie_filtered[(movie_filtered['duration'].str.endswith('Seasons')) | (movie_filtered['duration'].str.endswith('Season'))].index
+        movie_filtered.drop(dirty, inplace=True)
+        movie_filtered['duration'].dropna(inplace=True)
+        movie_filtered['duration'] = movie_filtered['duration'].apply(lambda x: x.replace(' min', ''))
+        movie_focus = movie_filtered.drop(columns=['title', 'type', 'country', 'date_added', 'rating', 'listed_in'])
+        print(movie_focus)
+        all_movie_duration = pd.concat([all_movie_duration, movie_focus])
+        if i == 2:
+            break
+    print(all_movie_duration.groupby(['release_year']).median())
+    annual_movie_length_median = all_movie_duration.groupby(['release_year']).median()
+    print(annual_movie_length_median)
+    plt.plot(annual_movie_length_median.index, annual_movie_length_median['duration'].values)
+    plt.savefig('annual_movie_length_median.png')
+    
+
 
 data = preprocessing(filenames)
 # type_ratio(data, platforms)
@@ -195,3 +222,4 @@ data = preprocessing(filenames)
 # minimum_age(data, platforms)
 # producing_countries(data, platforms)
 # movie_duration_analysis(data, platforms)
+median_movie_duration_by_year(data)

@@ -1,2 +1,7 @@
 .DS_Store
 */__pycache__
+/final/report/*.aux
+/final/report/*.log
+/final/report/*.out
+/final/report/*.pdf
+/final/report/*.gz
