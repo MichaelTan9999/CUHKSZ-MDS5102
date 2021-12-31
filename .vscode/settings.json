@@ -12,5 +12,6 @@
             "xelatex"
           ]
         }
-      ]
+      ],
+      "jupyter.jupyterServerType": "local"
 }

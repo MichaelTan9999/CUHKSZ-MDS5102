@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+import re
+from wordcloud import WordCloud
 
 pd.options.mode.chained_assignment = None
 
@@ -17,7 +19,7 @@ def preprocessing(filenames) -> pd.DataFrame:
     data = []
     for i in range(len(filenames)):
         data.append(pd.read_csv(filenames[i]))
-        data[i].drop(columns=['show_id', 'director', 'cast', 'description'], inplace=True)
+        data[i].drop(columns=['show_id', 'director', 'cast'], inplace=True)
         '''
             There are dirty data in the column 'rating'.
             Some values in this column denotes the info of 'duration', not 'rating'
@@ -36,25 +38,23 @@ def type_ratio(data, platforms) -> None:
     save the ratio of types pie chart of the platforms
     '''
     labels = ['Movie', 'TV Show']
-    fig = plt.figure(figsize=(15, 5))
-    plt.title('Type ratio among the platforms')
-    plt.axis('off')
+    # plt.axis('off')
+    os.system("rm -rf ./type_ratio")
+    os.system("mkdir type_ratio")
     for i in range(len(data)):
         num_movie = len(data[i][data[i]['type'] == 'Movie'])
         num_tv_show = len(data[i][data[i]['type'] == 'TV Show'])
-        ax = fig.add_subplot(1, len(data), i + 1)
-        ax.title.set_text(platforms[i])
+        plt.figure()
         plt.pie([num_movie, num_tv_show], labels=labels, autopct='%.2f%%')
-
-    fig.savefig('type_ratio.png', pad_inches=0.5, bbox_inches='tight')
+        plt.title('Type ratio of {}'.format(platforms[i]))
+        plt.savefig('./type_ratio/{}_type_ratio.png'.format(platforms[i]), bbox_inches='tight')
 
 def genres(data, platforms) -> None:
     '''
     save the genres pie chart of the platforms
     '''
-    fig = plt.figure(figsize=(20, 6))
-    plt.title('Type ratio among the platforms')
-    plt.axis('off')
+    os.system("rm -rf ./genres")
+    os.system("mkdir genres")
     for i in range(len(data)):
         topics = {}
         for labels in data[i]['listed_in']:
@@ -74,11 +74,10 @@ def genres(data, platforms) -> None:
                 thiner_topics['Other'] = thiner_topics.setdefault('Other', 0) + v
         # dirty data processing ends
 
-        ax = fig.add_subplot(1, len(data), i + 1)
-        ax.title.set_text(platforms[i])
-        plt.pie(thiner_topics.values(), labels=thiner_topics.keys(), autopct='%.2f%%', pctdistance=0.9)
-    
-    fig.savefig('genres.png', pad_inches=0.5)
+        plt.figure()
+        plt.title('Genres of {}'.format(platforms[i]))
+        plt.pie(thiner_topics.values(), labels=thiner_topics.keys(), autopct='%.2f%%', pctdistance=0.8)
+        plt.savefig('./genres/{}_genres.png'.format(platforms[i]), bbox_inches='tight')
 
 def added_date(data, platforms) -> None:
     '''
@@ -160,6 +159,7 @@ def producing_countries(data, platforms):
             for country in labels.split(', '):
                 countries[country] = countries.setdefault(country, 0) + 1
         countries = sorted(countries.items(), key=lambda kv:(kv[1], kv[0]), reverse=True)
+        print('On {}, there are {} countries involved in production.'.format(platforms[i], len(countries)))
         top_countries = []
         top_counts = []
         for name, counts in countries[:5]:
@@ -185,6 +185,7 @@ def movie_duration_analysis(data):
         movie_filtered.drop(dirty, inplace=True)
         all_movie_duration.extend(movie_filtered['duration'].dropna().str.replace(' min', '').values.astype(int))
 
+    plt.figure()
     sns.set(style='darkgrid')
     sns.kdeplot(data=all_movie_duration, shade=True)
     plt.xlabel('Duration of movies')
@@ -195,31 +196,51 @@ def median_movie_duration_by_year(data):
     find the median of movie durations of all the platforms by year.
     '''
     all_movie_duration = pd.DataFrame(columns=['duration'], index=['release_year'])
-    print(all_movie_duration)
     for i in range(len(data)):
+        if i == 2:
+            continue
+        '''
+        Here I jump over Hulu due to its dirty table!!!!!
+        '''
         movie_filtered = data[i][data[i]['type'] == 'Movie']
         dirty = movie_filtered[(movie_filtered['duration'].str.endswith('Seasons')) | (movie_filtered['duration'].str.endswith('Season'))].index
         movie_filtered.drop(dirty, inplace=True)
         movie_filtered['duration'].dropna(inplace=True)
         movie_filtered['duration'] = movie_filtered['duration'].apply(lambda x: x.replace(' min', ''))
         movie_focus = movie_filtered.drop(columns=['title', 'type', 'country', 'date_added', 'rating', 'listed_in'])
-        print(movie_focus)
         all_movie_duration = pd.concat([all_movie_duration, movie_focus])
-        if i == 2:
-            break
-    print(all_movie_duration.groupby(['release_year']).median())
+
     annual_movie_length_median = all_movie_duration.groupby(['release_year']).median()
-    print(annual_movie_length_median)
     plt.plot(annual_movie_length_median.index, annual_movie_length_median['duration'].values)
     plt.savefig('annual_movie_length_median.png')
     
+def description_wordcloud(data, platforms):
+    '''
+    Make wordclouds of descriptions 
+    '''
+    os.system("rm -rf ./wordcloud")
+    os.system("mkdir wordcloud")
+
+    for i in range(len(data)):
+        
+        descriptions = data[i]['description'].dropna()
+        words = []
+        for single_movie_description in descriptions:
+            single_movie_description.replace(',.?:\'\";', '')
+            words += re.sub(r'[^\w\s]', '', single_movie_description).split()
+        cloud = WordCloud(width=1600, height=800, background_color='white').generate(' '.join(words))
+        plt.axis('off')
+        plt.imshow(cloud, interpolation='bilinear')
+        plt.title('Wordcloud for {}'.format(platforms[i]))
+        plt.savefig('./wordcloud/{}_wordcloud.png'.format(platforms[i]), bbox_inches='tight')
 
 
 data = preprocessing(filenames)
-# type_ratio(data, platforms)
-# genres(data, platforms)
-# added_date(data, platforms)
-# minimum_age(data, platforms)
-# producing_countries(data, platforms)
-# movie_duration_analysis(data, platforms)
+type_ratio(data, platforms)
+genres(data, platforms)
+added_date(data, platforms)
+minimum_age(data, platforms)
+producing_countries(data, platforms)
+movie_duration_analysis(data)
 median_movie_duration_by_year(data)
+description_wordcloud(data, platforms)
